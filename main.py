@@ -20,10 +20,6 @@ def create():
     results = sparql.query().response.read()
     print(results)
 
-    # gets the first 3 geological ages
-    # from a Geological Timescale database,
-    # via a SPARQL endpoint
-
 def select():
     sparql = SPARQLWrapper(
         "http://localhost:7200/repositories/awvinfra_dev"
@@ -38,8 +34,7 @@ def select():
         }
         ORDER BY ?a
         LIMIT 3
-        """
-                    )
+        """)
 
     try:
         ret = sparql.queryAndConvert()

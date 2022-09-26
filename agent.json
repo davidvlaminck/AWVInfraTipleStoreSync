@@ -1,0 +1,17 @@
+{
+            "@type": "http://purl.org/dc/terms/Agent",
+            "@id": "https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
+            "purl:Agent.naam": "Agent 1",
+            "purl:Agent.contactinfo": [
+                {
+                    "schema:ContactPoint.telefoon": "+3234567890",
+                    "schema:ContactPoint.email": "agent.1@mow.vlaanderen.be",
+                    "schema:ContactPoint.adres": {
+                        "DtcAdres.straatnaam": "straatnaam",
+                        "DtcAdres.huisnummer": "1",
+                        "DtcAdres.postcode": "2000",
+                        "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
+                    }
+                }
+            ]
+        }
