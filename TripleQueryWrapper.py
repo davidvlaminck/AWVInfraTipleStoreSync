@@ -56,20 +56,18 @@ class TripleQueryWrapper:
             self.graph.parse(data=jsonld_string, format='json-ld', context=context)
 
     def save_to_params(self, param_dict):
-        params = self.get_params()
-
-        if params == {}:
-            self.update_query("""        
-            PREFIX params: <http://www.w3.org/ns/params/>        
-            INSERT DATA { <0> a <params:Params> }""")
-
         for k, v in param_dict.items():
             q = """        
 PREFIX params: <http://www.w3.org/ns/params/>
-DELETE { ?p params:$k$ ?v }      
+DELETE { ?p params:$k$ ?v }
 INSERT { ?p params:$k$ <$v$> }
-WHERE { ?p a <params:Params>}""".replace('$k$', k).replace("$v$", str(v))
+WHERE { ?p a <params:Params> }""".replace('$k$', k).replace("$v$", str(v))
             self.update_query(q)
+
+    def init_params(self):
+        self.update_query("""        
+PREFIX params: <http://www.w3.org/ns/params/>        
+INSERT DATA { <0> a <params:Params> }""")
 
     def get_params(self):
         params = self.select_query("""        
@@ -77,7 +75,7 @@ PREFIX params: <http://www.w3.org/ns/params/>
 SELECT ?p ?r ?x
 WHERE {
     ?p a <params:Params> .
-    ?p ?r ?x
+    ?p ?r ?x 
 }""")
         d = {}
 
@@ -93,52 +91,3 @@ WHERE {
             else:
                 d[p] = str(o)
         return d
-
-
-# # Create a Graph, add in some test data
-# g = Graph()
-# g.parse(
-#     data="""
-#         <x:> a <c:> .
-#         <y:> a <c:> .
-#     """,
-#     format="turtle"
-# )
-
-# # Select all the things (s) that are of type (rdf:type) c:
-# qres = g.query("""SELECT ?s WHERE { ?s a <c:> }""")
-#
-# for row in qres:
-#     print(f"{row.s}")
-# # prints:
-# # x:
-# # y:
-#
-# # Add in a new triple using SPATQL UPDATE
-# g.update("""INSERT DATA { <z:> a <c:> }""")
-#
-# # Select all the things (s) that are of type (rdf:type) c:
-# qres = g.query("""SELECT ?s WHERE { ?s a <c:> }""")
-#
-# print("After update:")
-# for row in qres:
-#     print(f"{row.s}")
-# # prints:
-# # x:
-# # y:
-# # z:
-#
-# # Change type of <y:> from <c:> to <d:>
-# g.update("""
-#          DELETE { <y:> a <c:> }
-#          INSERT { <y:> a <d:> }
-#          WHERE { <y:> a <c:> }
-#          """)
-# print("After second update:")
-# qres = g.query("""SELECT ?s ?o WHERE { ?s a ?o }""")
-# for row in qres:
-#     print(f"{row.s} a {row.o}")
-# # prints:
-# # x: a c:
-# # z: a c:
-# # y: a d:
