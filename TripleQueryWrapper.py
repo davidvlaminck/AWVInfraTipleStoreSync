@@ -18,6 +18,10 @@ class TripleQueryWrapper:
         else:
             return self.select_use_rdflib(query)
 
+    def print_db(self):
+        for s, p, o in self.graph:
+            print(s, p, o)
+
     def select_use_graph_db(self, query):
         sparql = SPARQLWrapper(self.url_or_path)
         sparql.setReturnFormat(JSON)

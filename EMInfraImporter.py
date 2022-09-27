@@ -81,7 +81,6 @@ class EMInfraImporter:
             if self.pagingcursor == '':
                 return
 
-
     def get_assets_from_webservice_by_naam(self, naam: str) -> [dict]:
         filter_string = '{ "naam": ' + f'"{naam}"' + ' }'
         return self.get_objects_from_oslo_search_endpoint(url_part='assets', filter_string=filter_string)
@@ -90,7 +89,7 @@ class EMInfraImporter:
         return self.get_objects_from_oslo_search_endpoint(url_part='assets')
 
     def import_assets_from_webservice_page_by_page(self, page_size: int) -> [dict]:
-        return self.get_objects_from_oslo_search_endpoint(url_part='assets', size=page_size, only_next_page=True)
+        return self.get_jsonld_from_oslo_search_endpoint(url_part='assets', size=page_size)
 
     def import_assets_from_webservice_by_uuids(self, asset_uuids: [str]) -> [dict]:
         asset_list_string = '", "'.join(asset_uuids)
