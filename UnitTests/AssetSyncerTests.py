@@ -85,6 +85,8 @@ class AssetSyncerTests(TestCase):
         asset_id_result = self.triple_query_wrapper.select_query(select_asset_id_asset1_query)
         self.assertEqual('10000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA', str(asset_id_result.bindings[0]['v']))
 
+        self.triple_query_wrapper.graph.serialize(destination='3_assets.ttl', format='ttl')
+
     def return_assets(self, page_size):
         self.eminfra_importer.pagingcursor = '=2more='
         yield json.dumps([{
