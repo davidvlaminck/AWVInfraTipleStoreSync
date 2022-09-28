@@ -1,13 +1,10 @@
 import json
-import os
 from pathlib import Path
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 from AssetSyncer import AssetSyncer
 from EMInfraImporter import EMInfraImporter
-from RequestHandler import RequestHandler
-from RequesterFactory import RequesterFactory
-from SettingsManager import SettingsManager
 from TripleQueryWrapper import TripleQueryWrapper
 
 
@@ -24,20 +21,14 @@ class AssetSyncerTests(TestCase):
         return select_value_by_uuid_key_query.replace('$aim-id$', aim_id).replace('$p$', predicate)
 
     def setup(self):
-        settings_manager = SettingsManager(
-            settings_path='/home/davidlinux/Documents/AWV/resources/settings_AwvinfraPostGISSyncer.json')
-
-        requester = RequesterFactory.create_requester(settings=settings_manager.settings, auth_type='JWT', env='prd')
-        request_handler = RequestHandler(requester)
-
-        self.eminfra_importer = EMInfraImporter(request_handler)
-
-        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False)
+        self.eminfra_importer = EMInfraImporter(MagicMock())
+        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False,
+                                                       otl_db_path=Path().resolve().parent / 'OTL 2.5.db')
 
     def test_sync_asset(self):
         self.setup()
         self.assets_syncer = AssetSyncer(triple_query_wrapper=self.triple_query_wrapper,
-                                         emInfraImporter=self.eminfra_importer)
+                                         em_infra_importer=self.eminfra_importer)
 
         self.eminfra_importer.import_assets_from_webservice_page_by_page = self.return_assets
 

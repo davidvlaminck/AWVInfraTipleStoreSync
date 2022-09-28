@@ -7,8 +7,6 @@ import json
 from SPARQLWrapper import SPARQLWrapper, JSON, TURTLE, POST
 from rdflib import Graph
 
-
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     g = Graph()
@@ -18,45 +16,44 @@ if __name__ == '__main__':
             "term": "http://purl.org/dc/terms/",
             "asset": "https://data.awvvlaanderen.be/id/asset/",
             "purl": "http://purl.org/dc/terms/",
-            "schema":"https://schema.org/"
+            "schema": "https://schema.org/"
 
         }
     }
 
-    
     jsonld = [{
-            "@type": "http://purl.org/dc/terms/Agent",
-            "@id": "https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
-            "purl:Agent.naam": "Agent 1",
-            "purl:Agent.contactinfo": [
-                {
-                    "schema:ContactPoint.telefoon": "+3234567890",
-                    "schema:ContactPoint.email": "agent.1@mow.vlaanderen.be",
-                    "schema:ContactPoint.adres": {
-                        "DtcAdres.straatnaam": "straatnaam",
-                        "DtcAdres.huisnummer": "1",
-                        "DtcAdres.postcode": "2000",
-                        "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
-                    }
+        "@type": "http://purl.org/dc/terms/Agent",
+        "@id": "https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
+        "purl:Agent.naam": "Agent 1",
+        "purl:Agent.contactinfo": [
+            {
+                "schema:ContactPoint.telefoon": "+3234567890",
+                "schema:ContactPoint.email": "agent.1@mow.vlaanderen.be",
+                "schema:ContactPoint.adres": {
+                    "DtcAdres.straatnaam": "straatnaam",
+                    "DtcAdres.huisnummer": "1",
+                    "DtcAdres.postcode": "2000",
+                    "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
                 }
-            ]
-        }, {
-            "@type": "http://purl.org/dc/terms/Agent",
-            "@id": "https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
-            "purl:Agent.naam": "Agent 2",
-            "purl:Agent.contactinfo": [
-                {
-                    "schema:ContactPoint.telefoon": "+3234567890",
-                    "schema:ContactPoint.email": "agent.2@mow.vlaanderen.be",
-                    "schema:ContactPoint.adres": {
-                        "DtcAdres.straatnaam": "straatnaam",
-                        "DtcAdres.huisnummer": "2",
-                        "DtcAdres.postcode": "2000",
-                        "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
-                    }
+            }
+        ]
+    }, {
+        "@type": "http://purl.org/dc/terms/Agent",
+        "@id": "https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
+        "purl:Agent.naam": "Agent 2",
+        "purl:Agent.contactinfo": [
+            {
+                "schema:ContactPoint.telefoon": "+3234567890",
+                "schema:ContactPoint.email": "agent.2@mow.vlaanderen.be",
+                "schema:ContactPoint.adres": {
+                    "DtcAdres.straatnaam": "straatnaam",
+                    "DtcAdres.huisnummer": "2",
+                    "DtcAdres.postcode": "2000",
+                    "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
                 }
-            ]
-        }]
+            }
+        ]
+    }]
     g.parse(data=json.dumps(jsonld), format='json-ld', context=context)
     for s, p, o in g:
         print(s, p, o)

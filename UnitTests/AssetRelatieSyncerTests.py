@@ -1,16 +1,12 @@
 import json
-import os
 from pathlib import Path
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 from AssetRelatieSyncer import AssetRelatieSyncer
 from AssetSyncer import AssetSyncer
 from EMInfraImporter import EMInfraImporter
-from RequestHandler import RequestHandler
-from RequesterFactory import RequesterFactory
-from SettingsManager import SettingsManager
 from TripleQueryWrapper import TripleQueryWrapper
-from UnitTests.AssetSyncerTests import AssetSyncerTests
 
 
 class AssetRelatieSyncerTests(TestCase):
@@ -38,19 +34,11 @@ class AssetRelatieSyncerTests(TestCase):
         return select_value_by_uuid_key_query.replace('$aim-id$', aim_id).replace('$p1$', predicate1).replace('$p2$', predicate2)
 
     def setup(self):
-        settings_manager = SettingsManager(
-            settings_path='/home/davidlinux/Documents/AWV/resources/settings_AwvinfraPostGISSyncer.json')
-
-        requester = RequesterFactory.create_requester(settings=settings_manager.settings, auth_type='JWT', env='prd')
-        request_handler = RequestHandler(requester)
-
-        self.eminfra_importer = EMInfraImporter(request_handler)
-
-        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False)
-
+        self.eminfra_importer = EMInfraImporter(MagicMock())
+        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False,
+                                                       otl_db_path=Path().resolve().parent / 'OTL 2.5.db')
         self.assets_syncer = AssetSyncer(triple_query_wrapper=self.triple_query_wrapper,
-                                         emInfraImporter=self.eminfra_importer)
-
+                                         em_infra_importer=self.eminfra_importer)
         self.eminfra_importer.import_assets_from_webservice_page_by_page = self.return_assets
         self.assets_syncer.sync_assets()
 
@@ -58,7 +46,7 @@ class AssetRelatieSyncerTests(TestCase):
         self.setup()
         self.triple_query_wrapper.print_db()
         self.assetrelaties_syncer = AssetRelatieSyncer(triple_query_wrapper=self.triple_query_wrapper,
-                                                       emInfraImporter=self.eminfra_importer)
+                                                       em_infra_importer=self.eminfra_importer)
 
         self.eminfra_importer.import_assetrelaties_from_webservice_page_by_page = self.return_assetrelaties
 

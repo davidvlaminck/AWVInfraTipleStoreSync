@@ -1,16 +1,21 @@
 import json
+from pathlib import Path
 
 import rdflib
 from SPARQLWrapper import SPARQLWrapper, JSON, POST
 
+from JsonLdCompleter import JsonLdCompleter
+
 
 class TripleQueryWrapper:
-    def __init__(self, use_graph_db: bool, url_or_path: str = None):
+    def __init__(self, otl_db_path: Path, use_graph_db: bool, url_or_path: str = None):
         self.use_graph_db = use_graph_db
         self.url_or_path = url_or_path
         self.graph = None
         if not use_graph_db:
             self.graph = rdflib.Graph()
+        self.jsonld_completer = JsonLdCompleter(otl_db_path=otl_db_path)
+
 
     def select_query(self, query: str):
         if self.use_graph_db:
@@ -95,3 +100,4 @@ WHERE {
             else:
                 d[p] = str(o)
         return d
+

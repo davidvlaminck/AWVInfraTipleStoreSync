@@ -1,132 +1,78 @@
-import os
+import json
 from pathlib import Path
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 from AgentSyncer import AgentSyncer
 from EMInfraImporter import EMInfraImporter
-from RequestHandler import RequestHandler
-from RequesterFactory import RequesterFactory
-from SettingsManager import SettingsManager
 from TripleQueryWrapper import TripleQueryWrapper
 
 
 class AgentSyncerTests(TestCase):
-    select_name_by_uuid_query = """
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            PREFIX term: <http://purl.org/dc/terms/>
+    def get_select_value_query(self, predicate, aim_id):
+        select_value_by_uuid_key_query = """
             PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
-
-            SELECT *
+            SELECT ?v
             WHERE {
-                ?agent a <term:Agent> .  
-                FILTER (?agent = <asset:00009b12-4dd1-4761-bc4d-af0f9a8f7ecd-aW5zdGFsbGF0aWUjTGluaw>)             
+                ?agent <$p$> ?v 
+                FILTER (?agent = <$aim-id$>)             
             }
             """
+        return select_value_by_uuid_key_query.replace('$aim-id$', aim_id).replace('$p$', predicate)
+
+    def get_select_complex_query(self, predicate1, predicate2, aim_id):
+        select_value_by_uuid_key_query = """
+            PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
+            SELECT ?v
+            WHERE {
+                ?asset <$p1$> ?w .
+                ?w <$p2$> ?v 
+                FILTER (?asset = <$aim-id$>)             
+            }
+            """
+        return select_value_by_uuid_key_query.replace('$aim-id$', aim_id).replace('$p1$', predicate1).replace('$p2$', predicate2)
 
     def setup(self):
-        settings_manager = SettingsManager(
-            settings_path='/home/davidlinux/Documents/AWV/resources/settings_AwvinfraPostGISSyncer.json')
-
-        requester = RequesterFactory.create_requester(settings=settings_manager.settings, auth_type='JWT', env='prd')
-        request_handler = RequestHandler(requester)
-        self.eminfra_importer = EMInfraImporter(request_handler)
-
-        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False)
+        self.eminfra_importer = EMInfraImporter(MagicMock())
+        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False,
+                                                       otl_db_path=Path().resolve().parent / 'OTL 2.5.db')
 
     def test_sync_agent(self):
         self.setup()
         self.agents_syncer = AgentSyncer(triple_query_wrapper=self.triple_query_wrapper,
-                                         emInfraImporter=self.eminfra_importer)
+                                         em_infra_importer=self.eminfra_importer)
+
+        self.eminfra_importer.import_agents_from_webservice_page_by_page = self.return_agents
+
+        select_naam_agent1_query = self.get_select_value_query(
+            predicate='http://purl.org/dc/terms/Agent.naam',
+            aim_id='https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA')
+        select_naam_agent2_query = self.get_select_value_query(
+            predicate='http://purl.org/dc/terms/Agent.naam',
+            aim_id='https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA')
+        select_email_agent1_query = self.get_select_complex_query(
+            predicate1='http://purl.org/dc/terms/Agent.contactinfo',
+            predicate2='https://schema.org/ContactPoint.email',
+            aim_id='https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA')
+
+        naam_result = self.triple_query_wrapper.select_query(select_naam_agent1_query)
+
+        self.assertListEqual([], naam_result.bindings)
+
         self.agents_syncer.sync_agents()
 
-        self.triple_query_wrapper.graph.serialize(destination='agents.ttl', format='ttl')
+        self.triple_query_wrapper.print_db()
 
-    def test_update_agents(self):
-        self.setup()
+        naam_result = self.triple_query_wrapper.select_query(select_naam_agent1_query)
+        self.assertEqual('Agent 1', str(naam_result.bindings[0]['v']))
+        naam2_result = self.triple_query_wrapper.select_query(select_naam_agent2_query)
+        self.assertEqual('Agent 2', str(naam2_result.bindings[0]['v']))
+        email1_result = self.triple_query_wrapper.select_query(select_email_agent1_query)
+        self.assertEqual('agent.1@mow.vlaanderen.be', str(email1_result.bindings[0]['v']))
 
-        self.agents_syncer = AgentSyncer(triple_query_wrapper=self.triple_query_wrapper,
-                                         emInfraImporter=self.eminfra_importer)
-
-        self.create_agent()
-
-
-
-        select_query = """
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX installatietype: <https://wegenenverkeer.data.vlaanderen.be/ns/installatie#>
-        PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
-
-        SELECT *
-        WHERE {
-            ?link a <installatietype:Link> .
-        }
-        ORDER BY ?link
-        LIMIT 3
-        """
-        r = self.triple_query_wrapper.select_query(select_query)
-
-        self.triple_query_wrapper.update_query("""
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX installatietype: <https://wegenenverkeer.data.vlaanderen.be/ns/installatie#>
-        PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
-        INSERT DATA { <asset:00009b12-4dd1-4761-bc4d-af0f9a8f7ecd-aW5zdGFsbGF0aWUjTGluaw> a <installatietype:Link> }""")
-
-        qres = self.triple_query_wrapper.select_query(select_query)
-        for row in qres:
-            print(row.link)
-
-
-
-
-
-        return
-        create_agent_query = "INSERT INTO agents (uuid, naam, actief) VALUES ('d2d0b44c-f8ba-4780-a3e7-664988a6db66', 'unit test', true)"
-        select_agent_query = "SELECT naam FROM agents WHERE uuid = '{uuid}'"
-        count_agent_query = "SELECT count(*) FROM agents"
-        cursor = self.connector.connection.cursor()
-        cursor.execute(create_agent_query)
-
-        with self.subTest('name check the first agent created'):
-            cursor.execute(select_agent_query.replace('{uuid}', 'd2d0b44c-f8ba-4780-a3e7-664988a6db66'))
-            result = cursor.fetchone()[0]
-            self.assertEqual('unit test', result)
-        with self.subTest('number of agents before update'):
-            cursor.execute(count_agent_query)
-            result = cursor.fetchone()[0]
-            self.assertEqual(1, result)
-
-        agents = [{'@type': 'http://purl.org/dc/terms/Agent',
-                   '@id': 'https://data.awvvlaanderen.be/id/asset/005162f7-1d84-4558-b911-1f09a2e26640-cHVybDpBZ2VudA',
-                   'purl:Agent.contactinfo': [
-                       {'schema:ContactPoint.telefoon': '+3233666824',
-                        'schema:ContactPoint.email': 'lvp@trafiroad.be'}],
-                   'purl:Agent.naam': 'Ludovic Van Pée'},
-                  {'@type': 'http://purl.org/dc/terms/Agent',
-                   '@id': 'https://data.awvvlaanderen.be/id/asset/0081576c-a62d-4b33-a884-597532cfdd77-cHVybDpBZ2VudA',
-                   'purl:Agent.naam': 'Frederic Crabbe', 'purl:Agent.contactinfo': [
-                      {'schema:ContactPoint.email': 'frederic.crabbe@mow.vlaanderen.be',
-                       'schema:ContactPoint.telefoon': '+3250248103',
-                       'schema:ContactPoint.adres': {'DtcAdres.straatnaam': 'CEL SCHADE WVL'}}]},
-                  {'@type': 'http://purl.org/dc/terms/Agent',
-                   '@id': 'https://data.awvvlaanderen.be/id/asset/d2d0b44c-f8ba-4780-a3e7-664988a6db66',
-                   'purl:Agent.naam': 'unit test changed'}]
-        self.agents_syncer.update_agents(agent_dicts=agents)
-
-        with self.subTest('name check after the first agent updated'):
-            cursor.execute(select_agent_query.replace('{uuid}', 'd2d0b44c-f8ba-4780-a3e7-664988a6db66'))
-            result = cursor.fetchone()[0]
-            self.assertEqual('unit test changed', result)
-        with self.subTest('name check after new agents created'):
-            cursor.execute(select_agent_query.replace('{uuid}', '005162f7-1d84-4558-b911-1f09a2e26640'))
-            result = cursor.fetchone()[0]
-            self.assertEqual('Ludovic Van Pée', result)
-        with self.subTest('number of agents after update'):
-            cursor.execute(count_agent_query)
-            result = cursor.fetchone()[0]
-            self.assertEqual(3, result)
-
-    def return_agents(self, agent_uuids):
-        return [{
+    def return_agents(self, page_size):
+        self.eminfra_importer.pagingcursor = '=1more='
+        yield json.dumps([{
             "@type": "http://purl.org/dc/terms/Agent",
             "@id": "https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
             "purl:Agent.naam": "Agent 1",
@@ -142,7 +88,22 @@ class AgentSyncerTests(TestCase):
                     }
                 }
             ]
-        }]
-
-    def create_agent(self):
-        self.agents_syncer.update_agents(self.return_agents([]))
+        }])
+        self.eminfra_importer.pagingcursor = ''
+        yield json.dumps([{
+            "@type": "http://purl.org/dc/terms/Agent",
+            "@id": "https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-cHVybDpBZ2VudA",
+            "purl:Agent.naam": "Agent 2",
+            "purl:Agent.contactinfo": [
+                {
+                    "schema:ContactPoint.telefoon": "+3234567890",
+                    "schema:ContactPoint.email": "agent.2@mow.vlaanderen.be",
+                    "schema:ContactPoint.adres": {
+                        "DtcAdres.straatnaam": "straatnaam",
+                        "DtcAdres.huisnummer": "2",
+                        "DtcAdres.postcode": "2000",
+                        "DtcAdres.gemeente": "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlAlgGemeente/antwerpen"
+                    }
+                }
+            ]
+        }])
