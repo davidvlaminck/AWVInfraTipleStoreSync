@@ -90,7 +90,7 @@ class AssetRelatieSyncerTests(TestCase):
                 "@id": "https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA"
             },
             "RelatieObject.doel": {
-                "@type": "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement",
+                "@type": "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort",
                 "@id": "https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA"
             },
             "AIMDBStatus.isActief": True,
