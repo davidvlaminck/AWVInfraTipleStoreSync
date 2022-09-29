@@ -1,7 +1,9 @@
 import json
+import os
 from pathlib import Path
 
 import rdflib
+import requests
 from SPARQLWrapper import SPARQLWrapper, JSON, POST
 
 from JsonLdCompleter import JsonLdCompleter
@@ -15,7 +17,6 @@ class TripleQueryWrapper:
         if not use_graph_db:
             self.graph = rdflib.Graph()
         self.jsonld_completer = JsonLdCompleter(otl_db_path=otl_db_path)
-
 
     def select_query(self, query: str):
         if self.use_graph_db:
@@ -60,23 +61,38 @@ class TripleQueryWrapper:
 
     def load_json(self, jsonld_string, context):
         if self.use_graph_db:
-            raise NotImplementedError
+            g = rdflib.Graph()
+            g.parse(data=jsonld_string, format='json-ld', context=context)
+            g.serialize(destination='temp.ttl', format='ttl')
+
+            headers = {
+              'Content-Type': 'application/x-turtle',
+              'Accept': 'application/json'
+            }
+
+            with open('temp.ttl', 'rb') as f:
+                requests.post(self.url_or_path + '/statements', data=f, headers=headers)
+            os.unlink('temp.ttl')
         else:
             self.graph.parse(data=jsonld_string, format='json-ld', context=context)
 
     def save_to_params(self, param_dict):
         for k, v in param_dict.items():
+            if isinstance(v, str):
+                v = '<' + v + '>'
+
             q = """        
 PREFIX params: <http://www.w3.org/ns/params/>
 DELETE { ?p params:$k$ ?v }
-INSERT { ?p params:$k$ <$v$> }
+INSERT { ?p params:$k$ $v$ }
 WHERE { ?p a <params:Params> }""".replace('$k$', k).replace("$v$", str(v))
             self.update_query(q)
 
     def init_params(self):
         self.update_query("""        
 PREFIX params: <http://www.w3.org/ns/params/>        
-INSERT DATA { <0> a <params:Params> }""")
+INSERT DATA { <http://www.0.org> a <params:Params> }""")
+        self.save_to_params({'sync_step': -1, 'pagingcursor': '', 'pagesize': 1000})
 
     def get_params(self):
         params = self.select_query("""        
@@ -97,6 +113,8 @@ WHERE {
             p = str(p).replace('http://www.w3.org/ns/params/', '')
             if p == 'fresh_sync':
                 d[p] = bool(o)
+            elif p in ['sync_step', 'pagesize']:
+                d[p] = int(o)
             else:
                 d[p] = str(o)
         return d

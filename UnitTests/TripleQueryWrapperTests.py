@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import TestCase
 
 from TripleQueryWrapper import TripleQueryWrapper
@@ -5,7 +6,7 @@ from TripleQueryWrapper import TripleQueryWrapper
 
 class TripleQueryWrapperTests(TestCase):
     def setup(self):
-        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False)
+        self.triple_query_wrapper = TripleQueryWrapper(use_graph_db=False, otl_db_path=Path().resolve().parent / 'OTL 2.5.db')
         self.triple_query_wrapper.init_params()
 
     def test_save_to_params(self):
