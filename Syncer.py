@@ -6,6 +6,7 @@ from datetime import datetime
 import requests
 
 from AgentSyncer import AgentSyncer
+from AssetRelatieSyncer import AssetRelatieSyncer
 from EMInfraImporter import EMInfraImporter
 from RequestHandler import RequestHandler
 
