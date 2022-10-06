@@ -26,7 +26,10 @@ class AgentSyncer:
             agents_json_ld = self.triple_query_wrapper.jsonld_completer.transform_json_ld(agents_json_ld)
 
             self.triple_query_wrapper.load_json(jsonld_string=agents_json_ld, context=context)
-            self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
+            if self.eminfra_importer.pagingcursor == '':
+                self.triple_query_wrapper.delete_in_params(['pagingcursor'])
+            else:
+                self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
 
             if self.eminfra_importer.pagingcursor == '':
                 break
