@@ -54,9 +54,12 @@ class Syncer:
                 pagingcursor = self.eminfra_importer.pagingcursor
                 if pagingcursor == '':
                     sync_step += 1
-                self.triple_wrapper.save_props_to_params(
-                    {'sync_step': sync_step,
-                     'pagingcursor': pagingcursor})
+                    self.triple_wrapper.save_props_to_params(
+                        {'sync_step': sync_step})
+                else:
+                    self.triple_wrapper.save_props_to_params(
+                        {'sync_step': sync_step,
+                         'pagingcursor': pagingcursor})
 
             except ConnectionError as err:
                 print(err)
