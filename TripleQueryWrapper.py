@@ -119,3 +119,11 @@ WHERE {
                 d[p] = str(o)
         return d
 
+    def delete_in_params(self, keys: [str]):
+        for k in keys:
+            q = """        
+        PREFIX params: <http://www.w3.org/ns/params/>
+        DELETE { ?p params:$k$ ?v }
+        WHERE { ?p a <params:Params> }""".replace('$k$', k)
+            self.update_query(q)
+
