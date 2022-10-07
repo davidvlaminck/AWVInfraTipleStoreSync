@@ -83,16 +83,20 @@ class TripleQueryWrapper:
 
             q = """        
 PREFIX params: <http://www.w3.org/ns/params/>
-DELETE { ?p params:$k$ ?v }
-INSERT { ?p params:$k$ $v$ }
-WHERE { ?p a <params:Params> }""".replace('$k$', k).replace("$v$", str(v))
+DELETE { ?p params:$k$ ?v }$insert_part$
+WHERE { ?p a <params:Params> }"""
+            if v is not None and v != '':
+                q = q.replace('$insert_part$', '\nINSERT { ?p params:$k$ $v$ }').replace("$v$", str(v))
+            else:
+                q = q.replace('$insert_part$', '')
+            q = q.replace('$k$', k)
             self.update_query(q)
 
     def init_params(self):
         self.update_query("""        
 PREFIX params: <http://www.w3.org/ns/params/>        
 INSERT DATA { <http://www.0.org> a <params:Params> }""")
-        self.save_to_params({'sync_step': -1, 'pagingcursor': '', 'pagesize': 1000})
+        self.save_to_params({'sync_step': -1, 'pagesize': 1000})
 
     def get_params(self):
         params = self.select_query("""        
@@ -117,6 +121,10 @@ WHERE {
                 d[p] = int(o)
             else:
                 d[p] = str(o)
+
+        if 'pagingcursor' not in d:
+            d['pagingcursor'] = ''
+
         return d
 
     def delete_in_params(self, keys: [str]):
