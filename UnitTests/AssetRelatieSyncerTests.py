@@ -10,6 +10,19 @@ from TripleQueryWrapper import TripleQueryWrapper
 
 
 class AssetRelatieSyncerTests(TestCase):
+    def get_relation_source_target_query(self, source, target, relation_type):
+        select_value_by_uuid_key_query = """
+            PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
+            SELECT ?r 
+            WHERE {
+                ?r a <$relation_type$> .
+                ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#RelatieObject.bron> <$source$> .
+                ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#RelatieObject.doel> <$target$>              
+            }
+            """
+        return select_value_by_uuid_key_query.replace('$source$', source).replace('$target$', target)\
+            .replace('$relation_type$', relation_type)
+
     def get_select_value_query(self, predicate, aim_id):
         select_value_by_uuid_key_query = """
             PREFIX asset: <https://data.awvvlaanderen.be/id/asset/>
@@ -61,6 +74,12 @@ class AssetRelatieSyncerTests(TestCase):
             predicate2='https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#DtcIdentificator.identificator',
             aim_id='https://data.awvvlaanderen.be/id/assetrelatie/00000000-1200-0000-0000-000000000000-b25kZXJkZWVsI0JldmVzdGlnaW5n')
 
+        relation_1_to_2_query = self.get_relation_source_target_query(
+            source='https://data.awvvlaanderen.be/id/asset/10000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA',
+            target='https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA',
+            relation_type='https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bevestiging'
+        )
+
         id_result = self.triple_query_wrapper.select_query(select_id_relatie1_query)
 
         self.assertListEqual([], id_result.bindings)
@@ -78,7 +97,14 @@ class AssetRelatieSyncerTests(TestCase):
         self.assertEqual('https://data.awvvlaanderen.be/id/asset/20000000-0000-0000-0000-000000000000-b25kZXJkZWVsI05ldHdlcmtwb29ydA',
                          str(doel_relatie1_result.bindings[0]['v']))
 
-        self.triple_query_wrapper.graph.serialize(destination='2_assets_met_relatie.ttl', format='ttl')
+        relation_1_to_2_result = self.triple_query_wrapper.select_query(relation_1_to_2_query)
+        row = relation_1_to_2_result.bindings[0]
+        self.assertEqual(
+            'https://data.awvvlaanderen.be/id/assetrelatie/00000000-1200-0000-0000-000000000000-b25kZXJkZWVsI0JldmVzdGlnaW5n',
+            str(row['r']))
+
+
+        # self.triple_query_wrapper.graph.serialize(destination='2_assets_met_relatie.ttl', format='ttl')
 
     def return_assetrelaties(self, page_size):
         self.eminfra_importer.pagingcursor = ''
