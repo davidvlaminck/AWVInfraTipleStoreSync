@@ -22,10 +22,12 @@ class AssetRelatieSyncer:
             }
         }
         for assets_json_ld in self.eminfra_importer.import_assetrelaties_from_webservice_page_by_page(page_size=page_size):
-            assets_json_ld = self.triple_query_wrapper.jsonld_completer.transform_json_ld(assets_json_ld)
+            assets_json_ld, count = self.triple_query_wrapper.jsonld_completer.transform_json_ld(assets_json_ld)
 
             self.triple_query_wrapper.load_json(jsonld_string=assets_json_ld, context=context)
-            self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
+            print(f'finished loading {count} assetrelaties')
 
             if self.eminfra_importer.pagingcursor == '':
                 break
+            else:
+                self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})

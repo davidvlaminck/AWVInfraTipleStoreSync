@@ -77,28 +77,35 @@ class TripleQueryWrapper:
             self.graph.parse(data=jsonld_string, format='json-ld', context=context)
 
     def save_to_params(self, param_dict):
+        self.delete_in_params(param_dict.keys())
+
         for k, v in param_dict.items():
-            if isinstance(v, str):
+            if k == 'pagingcursor':
+                v = '"' + v + '"'
+            elif isinstance(v, str):
                 v = '<' + v + '>'
 
             q = """        
 PREFIX params: <http://www.w3.org/ns/params/>
-DELETE { ?p params:$k$ ?v }$insert_part$
+INSERT { ?p params:$k$ $v$ }
 WHERE { ?p a <params:Params> }"""
-            if v is not None and v != '':
-                q = q.replace('$insert_part$', '\nINSERT { ?p params:$k$ $v$ }').replace("$v$", str(v))
-            else:
-                q = q.replace('$insert_part$', '')
-            q = q.replace('$k$', k)
+            q = q.replace("$v$", str(v)).replace('$k$', k)
             self.update_query(q)
 
     def init_params(self):
+        params = self.get_params()
+        if 'sync_step' in params:
+            return
+
         self.update_query("""        
 PREFIX params: <http://www.w3.org/ns/params/>        
 INSERT DATA { <http://www.0.org> a <params:Params> }""")
         self.save_to_params({'sync_step': -1, 'pagesize': 1000})
 
     def get_params(self):
+        if self.use_graph_db:
+            return self.get_params_graphdb()
+
         params = self.select_query("""        
 PREFIX params: <http://www.w3.org/ns/params/>
 SELECT ?p ?r ?x
@@ -132,6 +139,34 @@ WHERE {
             q = """        
         PREFIX params: <http://www.w3.org/ns/params/>
         DELETE { ?p params:$k$ ?v }
-        WHERE { ?p a <params:Params> }""".replace('$k$', k)
+        WHERE { ?p a <params:Params>; params:$k$ ?v }""".replace('$k$', k)
             self.update_query(q)
+
+    def get_params_graphdb(self):
+        params = self.select_query("""        
+        PREFIX params: <http://www.w3.org/ns/params/>
+        SELECT ?p ?r ?x
+        WHERE {
+            ?p a <params:Params> .
+            ?p ?r ?x 
+        }""")
+        d = {}
+
+        for record in params:
+            p = record['r']['value']
+            o = record['x']['value']
+            if str(p) == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type':
+                continue
+            p = str(p).replace('http://www.w3.org/ns/params/', '')
+            if p == 'fresh_sync':
+                d[p] = bool(o)
+            elif p in ['sync_step', 'pagesize']:
+                d[p] = int(o)
+            else:
+                d[p] = str(o)
+
+        if 'pagingcursor' not in d:
+            d['pagingcursor'] = ''
+
+        return d
 

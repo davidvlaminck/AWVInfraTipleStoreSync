@@ -19,15 +19,18 @@ class AssetSyncer:
                 "ond": "https://wegenenverkeer.data.vlaanderen.be/oef/onderhoud/",
                 "loc": "https://wegenenverkeer.data.vlaanderen.be/oef/locatie/",
                 "tz": "https://wegenenverkeer.data.vlaanderen.be/oef/toezicht/",
+                "geo": "https://wegenenverkeer.data.vlaanderen.be/oef/geometrie/",
             }
         }
         for assets_json_ld in self.eminfra_importer.import_assets_from_webservice_page_by_page(page_size=page_size):
-            assets_json_ld = self.triple_query_wrapper.jsonld_completer.transform_json_ld(assets_json_ld)
+            assets_json_ld, count = self.triple_query_wrapper.jsonld_completer.transform_json_ld(assets_json_ld)
 
             self.triple_query_wrapper.load_json(jsonld_string=assets_json_ld, context=context)
-            self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
+            print(f'finished loading {count} assets')
 
             if self.eminfra_importer.pagingcursor == '':
                 break
+            else:
+                self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
 
             #self.triple_query_wrapper.graph.serialize(destination='100_assets.ttl', format='ttl')

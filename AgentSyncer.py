@@ -23,14 +23,12 @@ class AgentSyncer:
             }
         }
         for agents_json_ld in self.eminfra_importer.import_agents_from_webservice_page_by_page(page_size=page_size):
-            agents_json_ld = self.triple_query_wrapper.jsonld_completer.transform_json_ld(agents_json_ld)
+            agents_json_ld, count = self.triple_query_wrapper.jsonld_completer.transform_json_ld(agents_json_ld)
 
             self.triple_query_wrapper.load_json(jsonld_string=agents_json_ld, context=context)
-            if self.eminfra_importer.pagingcursor == '':
-                self.triple_query_wrapper.delete_in_params(['pagingcursor'])
-            else:
-                self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})
+            print(f'finished loading {count} agents')
 
             if self.eminfra_importer.pagingcursor == '':
                 break
-
+            else:
+                self.triple_query_wrapper.save_to_params({'pagingcursor': self.eminfra_importer.pagingcursor})

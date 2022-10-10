@@ -14,7 +14,7 @@ class JsonLdCompleter:
             new_dict = self.fix_dict(asset)
             new_list.append(new_dict)
 
-        return json.dumps(new_list)
+        return json.dumps(new_list), len(new_list)
 
     def fix_dict(self, old_dict):
         new_dict = {}

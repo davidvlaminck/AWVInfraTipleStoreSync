@@ -115,8 +115,7 @@ class EMInfraImporter:
             self.get_objects_from_oslo_search_endpoint(url_part='assetrelaties'))
 
     def import_assetrelaties_from_webservice_page_by_page(self, page_size: int) -> [dict]:
-        return self.get_distinct_set_from_list_of_relations(
-            self.get_objects_from_oslo_search_endpoint(url_part='assetrelaties', size=page_size))
+        return self.get_objects_from_oslo_search_endpoint(url_part='assetrelaties', size=page_size)
 
     def import_assetrelaties_from_webservice_by_assetuuids(self, asset_uuids: [str]) -> [dict]:
         asset_list_string = '", "'.join(asset_uuids)
@@ -129,8 +128,7 @@ class EMInfraImporter:
             self.get_objects_from_oslo_search_endpoint(url_part='betrokkenerelaties'))
 
     def import_betrokkenerelaties_from_webservice_page_by_page(self, page_size: int) -> [dict]:
-        return self.get_distinct_set_from_list_of_relations(
-            self.get_jsonld_from_oslo_search_endpoint(url_part='betrokkenerelaties', size=page_size))
+        return self.get_jsonld_from_oslo_search_endpoint(url_part='betrokkenerelaties', size=page_size)
 
     def import_betrokkenerelaties_from_webservice_by_assetuuids(self, asset_uuids: [str]) -> [dict]:
         asset_list_string = '", "'.join(asset_uuids)
