@@ -27,18 +27,24 @@ WHERE {
     FILTER (?asset = <https://data.awvvlaanderen.be/id/asset/000c960e-b694-4f96-bf56-51872325c714-b25kZXJkZWVsI0NhbWVyYQ>)
 }"""
     query = """
-SELECT ?t ?r 
+SELECT ?uuid ?naam ?type
 WHERE { 
-    ?t a ?types .
-    FILTER (?types IN (<https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TLCfiPoort>,<https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersregelaar>)) .
-    ?t <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMDBStatus.isActief> TRUE
+    ?a a ?types .
+    ?a <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMDBStatus.isActief> TRUE .
+    ?a <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMObject.typeURI> ?type .
+    ?a <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMObject.assetId> ?assetId .
+    ?assetId <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#DtcIdentificator.identificator> ?id .
+	BIND(SUBSTR(?id,0,36) AS ?uuid).
+    FILTER (?types IN (<https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TLCfiPoort>,<https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersregelaar>)) .    
+    OPTIONAL {
+        ?a <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMNaamObject.naam> ?naam}
     FILTER NOT EXISTS {
         ?r a <https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoortBij> . 	
         ?v a <https://lgc.data.wegenenverkeer.be/ns/installatie#VRLegacy> .
         ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMDBStatus.isActief> TRUE .
         ?v <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#AIMDBStatus.isActief> TRUE .
         ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#RelatieObject.doel> ?v .  
-        ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#RelatieObject.bron> ?t } .
+        ?r <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#RelatieObject.bron> ?a } .
 }
 """
 
