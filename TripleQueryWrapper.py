@@ -18,9 +18,9 @@ class TripleQueryWrapper:
             self.graph = rdflib.Graph()
         self.jsonld_completer = JsonLdCompleter(otl_db_path=otl_db_path)
 
-    def select_query(self, query: str):
+    def select_query(self, query: str, return_format=JSON):
         if self.use_graph_db:
-            return self.select_use_graph_db(query)
+            return self.select_use_graph_db(query, return_format)
         else:
             return self.select_use_rdflib(query)
 
@@ -28,14 +28,17 @@ class TripleQueryWrapper:
         for s, p, o in self.graph:
             print(s, p, o)
 
-    def select_use_graph_db(self, query):
+    def select_use_graph_db(self, query, return_format=JSON):
         sparql = SPARQLWrapper(self.url_or_path)
-        sparql.setReturnFormat(JSON)
+        sparql.setReturnFormat(return_format)
         sparql.setQuery(query)
 
         try:
             ret = sparql.queryAndConvert()
-            return ret["results"]["bindings"]
+            if return_format == JSON:
+                return ret["results"]["bindings"]
+            else:
+                return ret
         except Exception as e:
             print(e)
 

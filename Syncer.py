@@ -26,6 +26,10 @@ class Syncer:
     def start_syncing(self):
         while True:
             self.perform_fresh_start_sync()
+            params = self.triple_wrapper.get_params()
+            sync_step = params['sync_step']
+            if sync_step == 5:
+                break
 
     def perform_fresh_start_sync(self):
         while True:

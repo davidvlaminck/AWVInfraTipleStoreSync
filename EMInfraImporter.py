@@ -18,7 +18,9 @@ class EMInfraImporter:
 
     def get_objects_from_oslo_search_endpoint(self, url_part: str, filter_string: str = '{}', size: int = 100,
                                               only_next_page: bool = False, expansions_string: str = '{}') -> [dict]:
-        url = f"core/api/otl/{url_part}/search?expand=contactInfo"
+        url = f"core/api/otl/{url_part}/search"
+        if url_part == 'betrokkenerelaties':
+            url += '?expand=contactInfo'
         body_fixed_part = '{"size": ' + f'{size}' + ''
         if filter_string != '{}':
             body_fixed_part += ', "filters": ' + filter_string
@@ -50,7 +52,9 @@ class EMInfraImporter:
 
     def get_jsonld_from_oslo_search_endpoint(self, url_part: str, filter_string: str = '{}', size: int = 100,
                                              only_next_page: bool = False, expansions_string: str = '{}') -> [dict]:
-        url = f"core/api/otl/{url_part}/search?expand=contactInfo"
+        url = f"core/api/otl/{url_part}/search"
+        if url_part == 'betrokkenerelaties':
+            url += '?expand=contactInfo'
         body_fixed_part = '{"size": ' + f'{size}' + ''
         if filter_string != '{}':
             body_fixed_part += ', "filters": ' + filter_string
@@ -115,7 +119,7 @@ class EMInfraImporter:
             self.get_objects_from_oslo_search_endpoint(url_part='assetrelaties'))
 
     def import_assetrelaties_from_webservice_page_by_page(self, page_size: int) -> [dict]:
-        return self.get_objects_from_oslo_search_endpoint(url_part='assetrelaties', size=page_size)
+        return self.get_jsonld_from_oslo_search_endpoint(url_part='assetrelaties', size=page_size, only_next_page=True)
 
     def import_assetrelaties_from_webservice_by_assetuuids(self, asset_uuids: [str]) -> [dict]:
         asset_list_string = '", "'.join(asset_uuids)
@@ -128,7 +132,7 @@ class EMInfraImporter:
             self.get_objects_from_oslo_search_endpoint(url_part='betrokkenerelaties'))
 
     def import_betrokkenerelaties_from_webservice_page_by_page(self, page_size: int) -> [dict]:
-        return self.get_jsonld_from_oslo_search_endpoint(url_part='betrokkenerelaties', size=page_size)
+        return self.get_jsonld_from_oslo_search_endpoint(url_part='betrokkenerelaties', size=page_size, only_next_page=True)
 
     def import_betrokkenerelaties_from_webservice_by_assetuuids(self, asset_uuids: [str]) -> [dict]:
         asset_list_string = '", "'.join(asset_uuids)
