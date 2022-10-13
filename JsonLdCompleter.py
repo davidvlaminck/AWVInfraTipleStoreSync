@@ -16,6 +16,13 @@ class JsonLdCompleter:
 
         return json.dumps(new_list), len(new_list)
 
+    def transform_if_http_value(self, value):
+        if not isinstance(value, str):
+            return value
+        if value.startswith('http'):
+            value = {"@id": value}
+        return value
+
     def fix_dict(self, old_dict):
         new_dict = {}
         for k, v in old_dict.items():
@@ -27,15 +34,17 @@ class JsonLdCompleter:
                     if isinstance(item, dict):
                         new_list.append(self.fix_dict(item))
                     else:
-                        new_list.append(item)
+                        new_list.append(self.transform_if_http_value(item))
                 v = new_list
 
             if ':' in k:
-                new_dict[k] = v
+                new_dict[k] = self.transform_if_http_value(v)
             elif k in ['RelatieObject.bron', 'RelatieObject.doel']:
-                new_dict['https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#' + k] = v
+                new_dict[
+                    'https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#' + k] = self.transform_if_http_value(
+                    v)
             elif k not in ['@type', '@id']:
-                new_dict[self.valid_uris[k]] = v
+                new_dict[self.valid_uris[k]] = self.transform_if_http_value(v)
             else:
                 new_dict[k] = v
         return new_dict
