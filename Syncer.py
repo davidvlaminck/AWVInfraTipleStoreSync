@@ -45,9 +45,9 @@ class Syncer:
                 if sync_step == 5:
                     break
 
-                if sync_step == 1:
+                if sync_step == 2:
                     self.sync_agents(page_size, pagingcursor)
-                elif sync_step == 2:
+                elif sync_step == 1:
                     self.sync_assets()
                 elif sync_step == 3:
                     self.sync_betrokkenerelaties()

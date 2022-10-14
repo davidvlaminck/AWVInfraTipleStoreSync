@@ -12,6 +12,7 @@ class JsonLdCompleter:
         new_list = []
         for asset in asset_dict:
             new_dict = self.fix_dict(asset)
+            new_dict = self.fix_geo(new_dict)
             new_list.append(new_dict)
 
         return json.dumps(new_list), len(new_list)
@@ -69,3 +70,26 @@ UNION SELECT uri FROM OSLODatatypeUnionAttributen""")
 
         con.close()
         return d
+
+    def fix_geo(self, new_dict):
+        if 'loc:Locatie.puntlocatie' in new_dict and 'loc:3Dpunt.puntgeometrie' in new_dict['loc:Locatie.puntlocatie']:
+            coords = new_dict['loc:Locatie.puntlocatie']['loc:3Dpunt.puntgeometrie']['loc:DtcCoord.lambert72']
+            x = coords['loc:DtcCoordLambert72.xcoordinaat']
+            y = coords['loc:DtcCoordLambert72.ycoordinaat']
+            z = coords['loc:DtcCoordLambert72.zcoordinaat']
+            new_dict['http://example.org/ApplicationSchema#hasExactGeometry'] = {
+                "@type": "http://www.opengis.net/ont/sf#Point",
+                "http://www.opengis.net/ont/geosparql#asWKT": {
+                        "@value": f"<https://www.opengis.net/def/crs/EPSG/9.9.1/31370> Point({x} {y})",
+                        "@type": "http://www.opengis.net/ont/geosparql#wktLiteral"
+                    }}
+
+        return new_dict
+
+    #  "loc:Locatie.geometrie": "",
+
+    # "geo:Geometrie.log": [
+    #     {
+    #       "geo:DtcLog.gaVersie": "GA_2.2.0",
+    #       "geo:DtcLog.geometrie": {
+    #         "geo:DtuGeometrie.punt": "POINT Z(167585.6 211223.1 0)"

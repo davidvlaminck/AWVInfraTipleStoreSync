@@ -74,8 +74,11 @@ class TripleQueryWrapper:
             }
 
             with open('temp.ttl', 'rb') as f:
-                requests.post(self.url_or_path + '/statements', data=f, headers=headers)
+                response = requests.post(self.url_or_path + '/statements', data=f, headers=headers)
+                print(response)
             os.unlink('temp.ttl')
+            if response.status_code != '200':
+                raise Exception(str(response) + '\n' + response.content)
         else:
             self.graph.parse(data=jsonld_string, format='json-ld', context=context)
 

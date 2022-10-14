@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     settings_manager = SettingsManager(
         settings_path='/home/davidlinux/Documents/AWV/resources/settings_TripleStoreSyncer.json')
-    db_settings = settings_manager.settings['databases']['prd']
+    db_settings = settings_manager.settings['databases']['dev']
 
     triple_wrapper = TripleQueryWrapper(use_graph_db=True,
                                         url_or_path=db_settings['host'] + db_settings['database'],
